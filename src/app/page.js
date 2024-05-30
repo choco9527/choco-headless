@@ -6,6 +6,8 @@ import { LineMdGithubLoop } from "@/app/components/github-icon";
 
 export default function Home() {
   const [imgUrl, setImgUrl] = useState("");
+  const [url, setUrl] = useState('https://bilibili.com/video/BV1an4y1R7Js/');
+
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -25,11 +27,12 @@ export default function Home() {
     const intervalTimer = startDuration();
     try {
       setLoading(true);
-      const res = await fetch(`/try?url=${url}`, {
+      const response = await fetch(`/try?url=${url}`, {
         next: { revalidate: 10 },
       });
-      const data = await res.blob();
-      setImgUrl(URL.createObjectURL(data));
+      const data = await response.json();
+      setImgUrl(`data:image/png;base64,${data.base64}`);
+      // setImgUrl(URL.createObjectURL(data));
     } catch (error) {
       console.error(error);
       alert("Something went wrong");
@@ -77,7 +80,8 @@ export default function Home() {
             </label>
             <div className="flex items-center space-x-3">
               <input
-                value={'https://bilibili.com/video/BV1an4y1R7Js/'}
+                value={url}
+                onChange={e => setUrl(e.target.value)}
                 type="text"
                 name="url"
                 id="url"

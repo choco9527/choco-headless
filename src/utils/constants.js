@@ -50,3 +50,5 @@ export const launchConfigAll = [
   '--use-gl=swiftshader',
   '--use-mock-keychain',
 ]
+
+export const VIDEO_ID = '#bilibili-player video'

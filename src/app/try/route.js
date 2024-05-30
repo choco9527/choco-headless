@@ -7,8 +7,9 @@ import {
   isDev,
   userAgent,
   remoteExecutablePath,
+  getVideoFrame
 } from "@/utils/utils";
-import {launchConfigAll, launchConfigSimple} from "@/utils/constants";
+import {launchConfigAll, launchConfigSimple, VIDEO_ID} from "@/utils/constants";
 
 export const maxDuration = 60; // This function can run for a maximum of 60 seconds (update by 2024-05-10)
 export const dynamic = "force-dynamic";
@@ -36,17 +37,14 @@ export async function GET(request) {
         ]
         : [...chromium.args, "--disable-blink-features=AutomationControlled"],
       defaultViewport: {width: 1920, height: 1080},
-      executablePath: isDev
-        ? localExecutablePath
-        : await chromium.executablePath(remoteExecutablePath),
-      headless: 'new', // isDev ? false : "new",
+      executablePath: isDev ? localExecutablePath : await chromium.executablePath(remoteExecutablePath),
+      headless: isDev ? false : "new",
       debuggingPort: isDev ? 9222 : undefined,
     });
 
     const pages = await browser.pages();
     const page = pages[0];
     await page.setUserAgent(userAgent);
-    await page.setViewport({width: 1920, height: 1080});
     const preloadFile = fs.readFileSync(
       path.join(process.cwd(), "/src/utils/preload.js"),
       "utf8"
@@ -57,17 +55,14 @@ export async function GET(request) {
       timeout: 60000,
     });
     await cfCheck(page);
-
     console.log("page title", await page.title());
-    const blob = await page.screenshot({type: "png"});
 
-    const headers = new Headers();
+    await page.waitForSelector(VIDEO_ID, {timeout: 60000});
+    // await page.keyboard.press('F')
+    const base64 = await getVideoFrame(page, VIDEO_ID);
 
-    headers.set("Content-Type", "image/png");
-    headers.set("Content-Length", blob.length.toString());
+    return NextResponse.json({ base64 }, { status: 200 });
 
-    // or just use new Response ❗️
-    return new NextResponse(blob, {status: 200, statusText: "OK", headers});
   } catch (err) {
     console.log(err);
     return NextResponse.json(
