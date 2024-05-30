@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import {NextResponse} from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import cfCheck from "@/utils/cfCheck";
@@ -8,6 +8,7 @@ import {
   userAgent,
   remoteExecutablePath,
 } from "@/utils/utils";
+import {launchConfigAll, launchConfigSimple} from "@/utils/constants";
 
 export const maxDuration = 60; // This function can run for a maximum of 60 seconds (update by 2024-05-10)
 export const dynamic = "force-dynamic";
@@ -20,8 +21,8 @@ export async function GET(request) {
   const urlStr = url.searchParams.get("url");
   if (!urlStr) {
     return NextResponse.json(
-      { error: "Missing url parameter" },
-      { status: 400 }
+      {error: "Missing url parameter"},
+      {status: 400}
     );
   }
 
@@ -31,23 +32,21 @@ export async function GET(request) {
       ignoreDefaultArgs: ["--enable-automation"],
       args: isDev
         ? [
-            "--disable-blink-features=AutomationControlled",
-            "--disable-features=site-per-process",
-            "-disable-site-isolation-trials",
-          ]
+          ...launchConfigSimple,
+        ]
         : [...chromium.args, "--disable-blink-features=AutomationControlled"],
-      defaultViewport: { width: 1920, height: 1080 },
+      defaultViewport: {width: 1920, height: 1080},
       executablePath: isDev
         ? localExecutablePath
         : await chromium.executablePath(remoteExecutablePath),
-      headless: isDev ? false : "new",
+      headless: 'new', // isDev ? false : "new",
       debuggingPort: isDev ? 9222 : undefined,
     });
 
     const pages = await browser.pages();
     const page = pages[0];
     await page.setUserAgent(userAgent);
-    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setViewport({width: 1920, height: 1080});
     const preloadFile = fs.readFileSync(
       path.join(process.cwd(), "/src/utils/preload.js"),
       "utf8"
@@ -60,7 +59,7 @@ export async function GET(request) {
     await cfCheck(page);
 
     console.log("page title", await page.title());
-    const blob = await page.screenshot({ type: "png" });
+    const blob = await page.screenshot({type: "png"});
 
     const headers = new Headers();
 
@@ -68,12 +67,12 @@ export async function GET(request) {
     headers.set("Content-Length", blob.length.toString());
 
     // or just use new Response ❗️
-    return new NextResponse(blob, { status: 200, statusText: "OK", headers });
+    return new NextResponse(blob, {status: 200, statusText: "OK", headers});
   } catch (err) {
     console.log(err);
     return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
+      {error: "Internal Server Error"},
+      {status: 500}
     );
   } finally {
     await browser.close();

@@ -77,6 +77,7 @@ export default function Home() {
             </label>
             <div className="flex items-center space-x-3">
               <input
+                value={'https://bilibili.com/video/BV1an4y1R7Js/'}
                 type="text"
                 name="url"
                 id="url"
