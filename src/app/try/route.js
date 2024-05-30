@@ -5,11 +5,10 @@ import cfCheck from "@/utils/cfCheck";
 import {
   localExecutablePath,
   isDev,
-  userAgent,
   remoteExecutablePath,
   getVideoFrame
 } from "@/utils/utils";
-import {launchConfigAll, launchConfigSimple, VIDEO_ID} from "@/utils/constants";
+import {userAgent, mobileUserAgent, launchConfigSimple, VIDEO_ID} from "@/utils/constants";
 
 export const maxDuration = 60; // This function can run for a maximum of 60 seconds (update by 2024-05-10)
 export const dynamic = "force-dynamic";
@@ -49,6 +48,7 @@ export async function GET(request) {
       path.join(process.cwd(), "/src/utils/preload.js"),
       "utf8"
     );
+    await page.setViewport({ width: 1920, height: 1080 });
     await page.evaluateOnNewDocument(preloadFile);
     await page.goto(urlStr, {
       waitUntil: "networkidle2",
